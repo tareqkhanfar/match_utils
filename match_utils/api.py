@@ -61,20 +61,23 @@ def generate_share_link(doctype, docname):
 		# Calculate expiration date (set to 10 years for unlimited access)
 		expiry_datetime = add_days(now_datetime(), 3650)
 		
-		# Create or update share record
+		# Check if share record already exists for this document
 		existing = frappe.db.get_value(
 			"Document Share Key",
 			{"reference_doctype": doctype, "reference_docname": docname},
-			"name"
+			["name", "key"],
+			as_dict=True
 		)
-		
+
 		if existing:
-			share_doc = frappe.get_doc("Document Share Key", existing)
-			share_doc.key = token
-			share_doc.expires_on = expiry_datetime
-			share_doc.created_by = frappe.session.user
-			share_doc.save(ignore_permissions=True)
+			# Return existing share link - don't create new token!
+			# This prevents "Invalid Link" errors when user clicks old links
+			share_doc = frappe.get_doc("Document Share Key", existing.name)
+			token = existing.key  # Use the existing token
+
+			frappe.logger().info(f"Returning existing share link for {doctype} {docname}")
 		else:
+			# Create new share record only if none exists
 			share_doc = frappe.get_doc({
 				"doctype": "Document Share Key",
 				"reference_doctype": doctype,
@@ -84,16 +87,11 @@ def generate_share_link(doctype, docname):
 				"created_by": frappe.session.user
 			})
 			share_doc.insert(ignore_permissions=True)
-		
-		# Commit the transaction immediately
-		frappe.db.commit()
 
-		# Add a small delay to ensure database replication/consistency
-		# This prevents "Invalid Link" errors on first click
-		import time
-		time.sleep(0.1)
+			# Commit the transaction immediately
+			frappe.db.commit()
 
-		frappe.logger().info(f"Share link created: {token} for {doctype} {docname}")
+			frappe.logger().info(f"Created new share link: {token} for {doctype} {docname}")
 
 		return {
 			"route": f"/api/method/match_utils.api.view_shared_pdf?key={token}",
