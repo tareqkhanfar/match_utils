@@ -61,37 +61,32 @@ def generate_share_link(doctype, docname):
 		# Calculate expiration date (set to 10 years for unlimited access)
 		expiry_datetime = add_days(now_datetime(), 3650)
 		
-		# Check if share record already exists for this document
+		# Delete any existing share record for this document
 		existing = frappe.db.get_value(
 			"Document Share Key",
 			{"reference_doctype": doctype, "reference_docname": docname},
-			["name", "key"],
-			as_dict=True
+			"name"
 		)
 
 		if existing:
-			# Return existing share link - don't create new token!
-			# This prevents "Invalid Link" errors when user clicks old links
-			share_doc = frappe.get_doc("Document Share Key", existing.name)
-			token = existing.key  # Use the existing token
-
-			frappe.logger().info(f"Returning existing share link for {doctype} {docname}")
-		else:
-			# Create new share record only if none exists
-			share_doc = frappe.get_doc({
-				"doctype": "Document Share Key",
-				"reference_doctype": doctype,
-				"reference_docname": docname,
-				"key": token,
-				"expires_on": expiry_datetime,
-				"created_by": frappe.session.user
-			})
-			share_doc.insert(ignore_permissions=True)
-
-			# Commit the transaction immediately
+			frappe.db.delete("Document Share Key", existing)
 			frappe.db.commit()
 
-			frappe.logger().info(f"Created new share link: {token} for {doctype} {docname}")
+		# Create new share record with new token
+		share_doc = frappe.get_doc({
+			"doctype": "Document Share Key",
+			"reference_doctype": doctype,
+			"reference_docname": docname,
+			"key": token,
+			"expires_on": expiry_datetime,
+			"owner": frappe.session.user
+		})
+		share_doc.insert(ignore_permissions=True)
+
+		# Commit and wait to ensure database sync
+		frappe.db.commit()
+
+		frappe.logger().info(f"Created share link: {token} for {doctype} {docname}")
 
 		return {
 			"route": f"/api/method/match_utils.api.view_shared_pdf?key={token}",
@@ -119,24 +114,28 @@ def view_shared_pdf(key):
 			return
 
 		# Find share record with retry mechanism for race conditions
+		# Use SQL directly to bypass any caching issues
 		share = None
-		max_retries = 3
+		max_retries = 5
 
 		for attempt in range(max_retries):
-			share = frappe.db.get_value(
-				"Document Share Key",
-				{"key": key},
-				["name", "reference_doctype", "reference_docname", "expires_on"],
-				as_dict=True
-			)
+			# Force fresh read from database (bypass cache)
+			result = frappe.db.sql("""
+				SELECT name, reference_doctype, reference_docname, expires_on
+				FROM `tabDocument Share Key`
+				WHERE `key` = %s
+				LIMIT 1
+			""", (key,), as_dict=True)
 
-			if share:
+			if result:
+				share = result[0]
 				break
 
 			# If not found and we have retries left, wait a bit
 			if attempt < max_retries - 1:
 				import time
-				time.sleep(0.2)  # Wait 200ms before retry
+				time.sleep(0.3)  # Wait 300ms before retry
+				frappe.db.commit()  # Ensure we see latest commits
 
 		if not share:
 			frappe.logger().error(f"Share key not found: {key}")
