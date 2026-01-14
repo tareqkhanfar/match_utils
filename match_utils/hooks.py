@@ -1,25 +1,9 @@
 app_name = "match_utils"
 app_title = "Match Utils"
-app_publisher = "match systems"
-app_description = "match utility classes and functions "
-app_email = "matchprosys@gmail.com"
-app_license = "mit"
-
-# Apps
-# ------------------
-
-# required_apps = []
-
-# Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "match_utils",
-# 		"logo": "/assets/match_utils/logo.png",
-# 		"title": "Match Utils",
-# 		"route": "/match_utils",
-# 		"has_permission": "match_utils.api.permission.has_app_permission"
-# 	}
-# ]
+app_publisher = "Match Systems"
+app_description = "Utilities for Match Systems - PDF sharing and keyboard shortcuts"
+app_email = "info@matchsystems.com"
+app_license = "MIT"
 
 # Includes in <head>
 # ------------------
@@ -43,7 +27,10 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Payment Entry": "public/js/payment_entry_share.js",
+    "Fees": "public/js/fees_share.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -68,7 +55,7 @@ app_license = "mit"
 # ----------
 
 # automatically create page for each record of this doctype
-# website_generators = ["Web Page"]
+# generators = ["Web Page"]
 
 # Jinja
 # ----------
