@@ -8,6 +8,7 @@ from frappe import _
 class ShortcutMapper(Document):
 	def validate(self):
 		# Validate and normalize shortcut key format
+		
 		if self.shortcut_key:
 			self.shortcut_key = self.shortcut_key.upper().strip()
 			self.validate_shortcut_format()
