@@ -656,7 +656,7 @@ HOME_PAGE_HTML = """<!DOCTYPE html>
   <div class="floating-shape shape3"></div>
 
   <header>
-    <img src="/files/match_logo.png" alt="Match Systems Logo">
+    <img src="/files/match_system_logo.png" alt="Match Systems Logo">
     <h1>Match Systems - حلول الأعمال المتكاملة</h1>
   </header>
 
@@ -772,9 +772,8 @@ def _attach_logo_file(target_filename):
 
 
 def setup_logo_files():
-	"""Make the Match Systems logo available under the well-known file names."""
+	"""Make the Match Systems logo available under the well-known file name."""
 	_attach_logo_file("match_system_logo.png")
-	_attach_logo_file("match_logo.png")
 
 
 def setup_navbar_settings():
@@ -802,13 +801,13 @@ def setup_website_settings():
 	website_settings.title_prefix = "Match ERP System"
 	website_settings.home_page = "home"
 
-	website_settings.banner_image = "/files/match_logo.png"
-	website_settings.splash_image = "/files/match_logo.png"
+	website_settings.banner_image = "/files/match_system_logo.png"
+	website_settings.splash_image = "/files/match_system_logo.png"
 	website_settings.favicon = "/files/match_system_logo.png"
 	website_settings.app_logo = "/files/match_system_logo.png"
 
 	website_settings.brand_html = (
-		'<img src="/files/match_logo.png" alt="Match ERP" style="height: 30px;">'
+		'<img src="/files/match_system_logo.png" alt="Match ERP" style="height: 30px;">'
 	)
 
 	website_settings.address = "Palestine - Ramallah - 📍"
