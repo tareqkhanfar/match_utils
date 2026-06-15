@@ -746,6 +746,7 @@ def after_install():
 	setup_system_settings()
 	setup_website_settings()
 	setup_home_page()
+	setup_translations()
 	frappe.db.commit()
 
 
@@ -831,3 +832,35 @@ def setup_home_page():
 	web_page.main_section_html = HOME_PAGE_HTML
 
 	web_page.save(ignore_permissions=True)
+
+
+# Source text -> Match ERP branded text, applied as Translation overrides
+# so the "ERPNext" name never shows up in the UI without touching erpnext itself.
+BRAND_TRANSLATIONS = {
+	"ERPNext": "Match ERP",
+}
+
+
+def setup_translations():
+	"""Override 'ERPNext' with 'Match ERP' for the languages used on the site."""
+	languages = {"en", "ar"}
+	system_language = frappe.db.get_single_value("System Settings", "language")
+	if system_language:
+		languages.add(system_language)
+
+	for language in languages:
+		for source_text, translated_text in BRAND_TRANSLATIONS.items():
+			if frappe.db.exists(
+				"Translation",
+				{"language": language, "source_text": source_text},
+			):
+				continue
+
+			frappe.get_doc(
+				{
+					"doctype": "Translation",
+					"language": language,
+					"source_text": source_text,
+					"translated_text": translated_text,
+				}
+			).insert(ignore_permissions=True)
