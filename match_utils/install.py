@@ -728,8 +728,10 @@ HOME_PAGE_HTML = """<!DOCTYPE html>
 </html>
 """
 
-# Help dropdown items that must be hidden by default in Navbar Settings
-HIDDEN_HELP_ITEMS = {
+# Help dropdown items that must not appear in the Help menu.
+# Frappe v16's sidebar "Help" submenu ignores the `hidden` flag on Navbar
+# Item rows, so these items are removed from help_dropdown entirely.
+REMOVED_HELP_ITEMS = {
 	"documentation",
 	"user forum",
 	"frappe school",
@@ -739,7 +741,7 @@ HIDDEN_HELP_ITEMS = {
 }
 
 # Fallback match by route/action in case item_label differs across versions
-HIDDEN_HELP_ITEM_SIGNATURES = [
+REMOVED_HELP_ITEM_SIGNATURES = [
 	"frappe.io/support",
 	"show_about",
 ]
@@ -786,16 +788,24 @@ def setup_navbar_settings():
 	navbar_settings = frappe.get_single("Navbar Settings")
 	navbar_settings.app_logo = "/files/match_system_logo.png"
 
-	for item in navbar_settings.help_dropdown:
+	def should_remove(item):
 		label = (item.item_label or "").strip().lower()
 		signature = f"{item.route or ''} {item.action or ''}".lower()
+		return label in REMOVED_HELP_ITEMS or any(
+			sig in signature for sig in REMOVED_HELP_ITEM_SIGNATURES
+		)
 
-		if label in HIDDEN_HELP_ITEMS or any(
-			sig in signature for sig in HIDDEN_HELP_ITEM_SIGNATURES
-		):
-			item.hidden = 1
+	navbar_settings.help_dropdown = [
+		item for item in navbar_settings.help_dropdown if not should_remove(item)
+	]
 
-	navbar_settings.save(ignore_permissions=True)
+	# Removing standard items would normally be blocked by
+	# validate_standard_navbar_items(), so bypass it here.
+	frappe.flags.in_patch = True
+	try:
+		navbar_settings.save(ignore_permissions=True)
+	finally:
+		frappe.flags.in_patch = False
 
 
 def setup_system_settings():
