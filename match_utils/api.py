@@ -9,24 +9,29 @@ from frappe.utils.pdf import get_pdf
 
 @frappe.whitelist()
 def get_active_shortcuts():
-	"""Get all active keyboard shortcuts for current user"""
+	"""Get all active keyboard shortcuts"""
 	try:
 		shortcuts = frappe.get_all(
 			'Shortcut Mapper',
 			filters={'enabled': 1},
-			fields=['shortcut_key', 'target_type', 'target_doctype', 'target_report', 'target_page', 'enabled']
+			fields=[
+				'shortcut_key', 'target_type', 'target_doctype', 'target_report',
+				'target_page', 'open_mode', 'description', 'enabled'
+			]
 		)
-		
+
 		shortcut_map = {}
-		for shortcut in shortcuts:
-			shortcut_map[shortcut.shortcut_key] = {
-				'target_type': shortcut.target_type,
-				'target_doctype': shortcut.target_doctype,
-				'target_report': shortcut.target_report,
-				'target_page': shortcut.target_page,
-				'enabled': shortcut.enabled
+		for s in shortcuts:
+			shortcut_map[s.shortcut_key] = {
+				'target_type': s.target_type,
+				'target_doctype': s.target_doctype,
+				'target_report': s.target_report,
+				'target_page': s.target_page,
+				'open_mode': s.open_mode or 'List',
+				'description': s.description,
+				'enabled': s.enabled
 			}
-		
+
 		return shortcut_map
 	except Exception as e:
 		frappe.log_error(f"Error loading shortcuts: {str(e)}")

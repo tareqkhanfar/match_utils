@@ -10,7 +10,7 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/match_utils/css/match_utils.css"
-# app_include_js = "/assets/match_utils/js/match_utils.js"
+app_include_js = "match_utils.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/match_utils/css/match_utils.css"
@@ -70,7 +70,7 @@ doctype_js = {
 # ------------
 
 # before_install = "match_utils.install.before_install"
-# after_install = "match_utils.install.after_install"
+after_install = "match_utils.install.after_install"
 
 # Uninstallation
 # ------------

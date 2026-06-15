@@ -11,6 +11,7 @@
      "column_break_3",
      "target_type",
      "target_doctype",
+     "open_mode",
      "target_report",
      "target_page",
      "section_break_5",
@@ -54,6 +55,15 @@
       "options": "DocType"
      },
      {
+      "default": "List",
+      "depends_on": "eval:doc.target_type=='DocType'",
+      "fieldname": "open_mode",
+      "fieldtype": "Select",
+      "label": "Open Mode",
+      "options": "List\nNew Form",
+      "description": "List: opens the doctype list view. New Form: opens a blank new document."
+     },
+     {
       "depends_on": "eval:doc.target_type=='Report'",
       "fieldname": "target_report",
       "fieldtype": "Link",
@@ -76,17 +86,19 @@
      {
       "fieldname": "description",
       "fieldtype": "Small Text",
+      "in_list_view": 1,
       "label": "Description"
      }
     ],
     "grid_page_length": 50,
     "index_web_pages_for_search": 1,
     "links": [],
-    "modified": "2026-01-08 00:05:59.927163",
+    "modified": "2026-03-23 00:00:00.000000",
     "modified_by": "Administrator",
     "module": "Match Utils",
     "name": "Shortcut Mapper",
     "naming_rule": "By fieldname",
+    "autoname": "field:shortcut_key",
     "owner": "Administrator",
     "permissions": [
      {
@@ -100,6 +112,10 @@
       "role": "System Manager",
       "share": 1,
       "write": 1
+     },
+     {
+      "read": 1,
+      "role": "All"
      }
     ],
     "row_format": "Dynamic",
