@@ -729,13 +729,19 @@ HOME_PAGE_HTML = """<!DOCTYPE html>
 """
 
 # Help dropdown items that must be hidden by default in Navbar Settings
-HIDDEN_HELP_ITEMS = [
-	"Documentation",
-	"User Forum",
-	"Frappe School",
-	"Report an Issue",
-	"About",
-	"Frappe Support",
+HIDDEN_HELP_ITEMS = {
+	"documentation",
+	"user forum",
+	"frappe school",
+	"report an issue",
+	"about",
+	"frappe support",
+}
+
+# Fallback match by route/action in case item_label differs across versions
+HIDDEN_HELP_ITEM_SIGNATURES = [
+	"frappe.io/support",
+	"show_about",
 ]
 
 
@@ -781,7 +787,12 @@ def setup_navbar_settings():
 	navbar_settings.app_logo = "/files/match_system_logo.png"
 
 	for item in navbar_settings.help_dropdown:
-		if item.item_label in HIDDEN_HELP_ITEMS:
+		label = (item.item_label or "").strip().lower()
+		signature = f"{item.route or ''} {item.action or ''}".lower()
+
+		if label in HIDDEN_HELP_ITEMS or any(
+			sig in signature for sig in HIDDEN_HELP_ITEM_SIGNATURES
+		):
 			item.hidden = 1
 
 	navbar_settings.save(ignore_permissions=True)
