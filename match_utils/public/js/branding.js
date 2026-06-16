@@ -1,43 +1,9 @@
-// Patch desktop.js setup_avatar to remove hardcoded About and Frappe Support items
+// Match Systems branding overrides — runs on every page load
 frappe.after_ajax(function () {
+
+	/* ── 1. Remove About & Frappe Support from user avatar menu ──────── */
 	const LABELS_TO_REMOVE = ["About", "Frappe Support"];
 
-	$(document).on("app_ready", function () {
-		patch_avatar_menu();
-	});
-
-	// Also patch on page change in case desktop re-renders
-	$(document).on("page-change", function () {
-		patch_avatar_menu();
-	});
-
-	function patch_avatar_menu() {
-		const desktop = frappe.pages?.desktop;
-		if (!desktop || !desktop.page) return;
-
-		const app = desktop.page?.desktop_page;
-		if (!app || typeof app.setup_avatar !== "function") return;
-
-		const original = app.setup_avatar.bind(app);
-		app.setup_avatar = function () {
-			original();
-			// Remove unwanted items from the rendered menu
-			remove_items_from_dom();
-		};
-	}
-
-	function remove_items_from_dom() {
-		$(".desktop-avatar")
-			.closest(".frappe-menu-wrapper, .dropdown")
-			.find(".dropdown-menu-item, .menu-item-title")
-			.filter(function () {
-				return LABELS_TO_REMOVE.includes($(this).text().trim());
-			})
-			.closest(".dropdown-menu-item")
-			.remove();
-	}
-
-	// Patch frappe.ui.create_menu to strip unwanted items before rendering
 	const _original_create_menu = frappe.ui.create_menu;
 	frappe.ui.create_menu = function (opts) {
 		if (opts && opts.menu_items) {
@@ -47,4 +13,114 @@ frappe.after_ajax(function () {
 		}
 		return _original_create_menu.call(this, opts);
 	};
+
+	/* ── 2. Replace "ERPNext" with "Match ERP" everywhere in the DOM ── */
+	const BRAND_MAP = {
+		"ERPNext": "Match ERP",
+		"Erpnext": "Match ERP",
+		"erpnext": "match_erp",         // keep lowercase slug untouched in URLs
+	};
+
+	function replace_text_nodes(root) {
+		const walker = document.createTreeWalker(
+			root || document.body,
+			NodeFilter.SHOW_TEXT,
+			null,
+			false
+		);
+		let node;
+		while ((node = walker.nextNode())) {
+			const original = node.nodeValue;
+			let replaced = original
+				.replace(/ERPNext/g, "Match ERP")
+				.replace(/Erpnext/g, "Match ERP");
+			if (replaced !== original) node.nodeValue = replaced;
+		}
+		// Also fix title/placeholder/alt attributes
+		root = root || document;
+		root.querySelectorAll("[title],[placeholder],[alt]").forEach(function (el) {
+			["title", "placeholder", "alt"].forEach(function (attr) {
+				const v = el.getAttribute(attr);
+				if (v && v.includes("ERPNext")) {
+					el.setAttribute(attr, v.replace(/ERPNext/g, "Match ERP"));
+				}
+			});
+		});
+	}
+
+	// Run on initial load
+	$(document).on("app_ready page-change", function () {
+		setTimeout(replace_text_nodes, 100);
+	});
+
+	// Also patch frappe.get_versions / About dialog
+	const _show_about = frappe.ui.toolbar.show_about;
+	if (_show_about) {
+		frappe.ui.toolbar.show_about = function () {
+			_show_about.apply(this, arguments);
+			setTimeout(function () {
+				$(".modal-body, #about-app-versions").each(function () {
+					replace_text_nodes(this);
+				});
+			}, 300);
+		};
+	}
+
+	// Patch app switcher card title
+	$(document).on("app_ready", function () {
+		setTimeout(function () {
+			$(".app-card-title, .app-title, .app-name").each(function () {
+				const $el = $(this);
+				if ($el.text().trim() === "ERPNext") {
+					$el.text("Match ERP");
+				}
+			});
+			replace_text_nodes();
+		}, 200);
+	});
+
+	// Observe DOM mutations to catch dynamically rendered text
+	if (window.MutationObserver) {
+		const observer = new MutationObserver(function (mutations) {
+			mutations.forEach(function (m) {
+				m.addedNodes.forEach(function (node) {
+					if (node.nodeType === 1) replace_text_nodes(node);
+					else if (node.nodeType === 3) {
+						const v = node.nodeValue;
+						if (v && v.includes("ERPNext")) {
+							node.nodeValue = v.replace(/ERPNext/g, "Match ERP");
+						}
+					}
+				});
+			});
+		});
+		document.addEventListener("DOMContentLoaded", function () {
+			observer.observe(document.body, { childList: true, subtree: true });
+		});
+		// If already loaded
+		if (document.body) {
+			observer.observe(document.body, { childList: true, subtree: true });
+		}
+	}
+
+	/* ── 3. Replace document <title> tag ────────────────────────────── */
+	const _original_title = Object.getOwnPropertyDescriptor(Document.prototype, "title");
+	if (_original_title && _original_title.set) {
+		Object.defineProperty(document, "title", {
+			get: function () {
+				return _original_title.get.call(this);
+			},
+			set: function (val) {
+				_original_title.set.call(
+					this,
+					val ? val.replace(/ERPNext/g, "Match ERP") : val
+				);
+			},
+			configurable: true,
+		});
+		// Fix current title
+		if (document.title.includes("ERPNext")) {
+			document.title = document.title.replace(/ERPNext/g, "Match ERP");
+		}
+	}
 });
