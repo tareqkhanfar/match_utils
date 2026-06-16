@@ -755,6 +755,13 @@ def after_install():
 	setup_website_settings()
 	setup_home_page()
 	setup_translations()
+	create_workspace()
+	frappe.db.commit()
+
+
+def after_migrate():
+	"""Re-create the workspace if it was deleted during migrate."""
+	create_workspace()
 	frappe.db.commit()
 
 
@@ -884,3 +891,66 @@ def setup_translations():
 					"translated_text": translated_text,
 				}
 			).insert(ignore_permissions=True)
+
+
+WORKSPACE_LINKS = [
+	{"type": "Card Break", "label": "Accounting (المحاسبة)", "link_type": "DocType", "link_to": None, "link_count": 11},
+	{"type": "Link", "label": "الشركة", "link_type": "DocType", "link_to": "Company"},
+	{"type": "Link", "label": "الشجرة المحاسبية", "link_type": "DocType", "link_to": "Account"},
+	{"type": "Link", "label": "القيود اليومية", "link_type": "DocType", "link_to": "Journal Entry"},
+	{"type": "Link", "label": "سندات القبض والدفع", "link_type": "DocType", "link_to": "Payment Entry"},
+	{"type": "Link", "label": "فاتورة مبيعات", "link_type": "DocType", "link_to": "Sales Invoice"},
+	{"type": "Link", "label": "فاتورة مشتريات", "link_type": "DocType", "link_to": "Purchase Invoice"},
+	{"type": "Link", "label": "السنة المالية", "link_type": "DocType", "link_to": "Fiscal Year"},
+	{"type": "Link", "label": "طرق الدفع", "link_type": "DocType", "link_to": "Mode of Payment"},
+	{"type": "Link", "label": "كشف حساب", "link_type": "Report", "link_to": "General Ledger", "report_ref_doctype": "GL Entry"},
+	{"type": "Link", "label": "ميزان المراجعة", "link_type": "Report", "link_to": "Trial Balance", "report_ref_doctype": "GL Entry"},
+	{"type": "Link", "label": "ربط الفواتير بالدفعات", "link_type": "DocType", "link_to": "Payment Reconciliation"},
+	{"type": "Card Break", "label": "Stock (المخزون)", "link_type": "DocType", "link_to": None, "link_count": 6},
+	{"type": "Link", "label": "الصنف", "link_type": "DocType", "link_to": "Item"},
+	{"type": "Link", "label": "مجموعة الصنف", "link_type": "DocType", "link_to": "Item Group"},
+	{"type": "Link", "label": "طلب مواد", "link_type": "DocType", "link_to": "Material Request"},
+	{"type": "Link", "label": "رصيد المخزون", "link_type": "Report", "link_to": "Stock Balance", "report_ref_doctype": "Stock Ledger Entry"},
+	{"type": "Link", "label": "حركات المخزون", "link_type": "Report", "link_to": "Stock Ledger", "report_ref_doctype": "Stock Ledger Entry"},
+	{"type": "Link", "label": "قيد المخزون", "link_type": "DocType", "link_to": "Stock Entry"},
+	{"type": "Card Break", "label": "Reports (  تقارير مالية )", "link_type": "DocType", "link_to": None, "link_count": 7},
+	{"type": "Link", "label": "الارباح والخسائر", "link_type": "Report", "link_to": "Profit and Loss Statement", "is_query_report": 1},
+	{"type": "Link", "label": "ارباح المبيعات", "link_type": "Report", "link_to": "Gross Profit", "report_ref_doctype": "Sales Invoice"},
+	{"type": "Link", "label": "تقرير فواتير المبيعات", "link_type": "Report", "link_to": "Sales Register", "report_ref_doctype": "Sales Invoice"},
+	{"type": "Link", "label": "ذمم الزبائن", "link_type": "Report", "link_to": "Customer Ledger Summary", "is_query_report": 1},
+	{"type": "Link", "label": "ذمم التجار", "link_type": "Report", "link_to": "Supplier Ledger Summary", "report_ref_doctype": "Purchase Invoice"},
+	{"type": "Link", "label": "اعمار الذمم للزبائن", "link_type": "Report", "link_to": "Accounts Receivable", "report_ref_doctype": "Sales Invoice"},
+	{"type": "Link", "label": "اعمار الذمم للتجار", "link_type": "Report", "link_to": "Accounts Payable", "report_ref_doctype": "Purchase Invoice"},
+]
+
+WORKSPACE_CONTENT = (
+	'[{"id":"7LUV3RSsDK","type":"header","data":{"text":"<span style=\\"font-size: 16px;\\"><b>Accounting and stock</b></span>","col":12}},'
+	'{"id":"vPAUoVwc4R","type":"card","data":{"card_name":"Accounting (المحاسبة)","col":4}},'
+	'{"id":"nTIii66SN-","type":"card","data":{"card_name":"Stock (المخزون)","col":4}},'
+	'{"id":"gd9F-I2u5R","type":"card","data":{"card_name":"Reports (  تقارير مالية )","col":4}}]'
+)
+
+
+def create_workspace():
+	"""Create the برنامج المحاسبة workspace. Idempotent — skips if already exists."""
+	name = "برنامج المحاسبة"
+
+	if frappe.db.exists("Workspace", name):
+		return
+
+	ws = frappe.new_doc("Workspace")
+	ws.name = name
+	ws.title = name
+	ws.label = name
+	ws.module = "Match Utils"
+	ws.app = "match_utils"
+	ws.public = 1
+	ws.icon = "ri-calculator-line"
+	ws.indicator_color = "green"
+	ws.is_hidden = 0
+	ws.content = WORKSPACE_CONTENT
+
+	for row in WORKSPACE_LINKS:
+		ws.append("links", row)
+
+	ws.insert(ignore_permissions=True)

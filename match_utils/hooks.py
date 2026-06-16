@@ -71,6 +71,7 @@ doctype_js = {
 
 # before_install = "match_utils.install.before_install"
 after_install = "match_utils.install.after_install"
+after_migrate = "match_utils.install.after_migrate"
 
 # Uninstallation
 # ------------
