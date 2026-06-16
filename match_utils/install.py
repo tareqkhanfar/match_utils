@@ -760,9 +760,28 @@ def after_install():
 
 
 def after_migrate():
-	"""Re-create the workspace if it was deleted during migrate."""
+	"""Run after every migrate — re-create workspace and purge unwanted navbar items.
+	Runs AFTER frappe's sync_standard_items(), so deletions here persist.
+	"""
 	create_workspace()
+	_purge_navbar_help_items()
 	frappe.db.commit()
+
+
+def _purge_navbar_help_items():
+	"""Directly delete unwanted help dropdown rows from DB.
+	sync_standard_items() re-adds them before after_migrate fires,
+	so we delete here to ensure they're gone after every migrate.
+	"""
+	labels_to_remove = ("About", "Frappe Support", "Documentation",
+						"User Forum", "Frappe School", "Report an Issue")
+	placeholders = ", ".join(["%s"] * len(labels_to_remove))
+	frappe.db.sql(f"""
+		DELETE FROM `tabNavbar Item`
+		WHERE parent='Navbar Settings'
+		AND parentfield='help_dropdown'
+		AND item_label IN ({placeholders})
+	""", labels_to_remove)
 
 
 def _attach_logo_file(target_filename):
