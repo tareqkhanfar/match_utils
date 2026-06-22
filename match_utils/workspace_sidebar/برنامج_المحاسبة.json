@@ -1,0 +1,25 @@
+{
+ "app": "match_utils",
+ "doctype": "Workspace Sidebar",
+ "for_user": "",
+ "header_icon": "accounting",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "ri-calculator-line",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "برنامج المحاسبة",
+   "link_to": "برنامج المحاسبة",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "module": "Match Utils",
+ "name": "برنامج المحاسبة",
+ "standard": 1,
+ "title": "برنامج المحاسبة"
+}
