@@ -46,16 +46,15 @@ CSS = r"""@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;5
 }
 
 /* ITEM SUB-TABLE (Show Details) */
-.soa-items-row td { padding: 0 !important; background: #fbfdff !important; border-left: none !important; }
+.soa-items-row td { padding: 0 !important; background: #f9fbff !important; border-left: none !important; }
 .soa-subtable-wrap { padding: 4px 26px 8px 26px; }
 .soa-subtable-title { font-size: 7.5pt; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
-.soa-subtable { width: 100%; border-collapse: collapse; font-size: 7.8pt; border: 1px solid #cfe0f5; }
-.soa-subtable thead tr { background: #eaf2fd; }
-.soa-subtable th { padding: 3px 6px; text-align: center; font-weight: 700; color: #1e3a5f; border: 1px solid #cfe0f5; white-space: nowrap; }
-.soa-subtable td { padding: 3px 6px; text-align: center; border: 1px solid #e3edf9; }
-.soa-subtable td.txt { text-align: right; }
-.soa-subtable td.num { text-align: left; font-family: var(--mono); direction: ltr; }
-.soa-subtable tfoot td { font-weight: 700; background: #f3f8ff; }
+.soa-subtable { width: 100%; border-collapse: collapse; font-size: 7.8pt; border: 1px solid #cfe0f5; background: var(--white); }
+.soa-subtable thead tr { background: #eaf2fd !important; color: #1e3a5f !important; }
+.soa-subtable thead th { padding: 3px 6px; text-align: center; font-weight: 700; color: #1e3a5f !important; background: #eaf2fd !important; border: 1px solid #cfe0f5; white-space: nowrap; }
+.soa-subtable tbody td { padding: 3px 6px; text-align: center; color: var(--ink); border: 1px solid #e3edf9; }
+.soa-subtable tbody td.txt { text-align: right; }
+.soa-subtable tbody td.num { text-align: left; font-family: var(--mono); direction: ltr; }
 
 /* FILTERS STRIP */
 .soa-filters {
@@ -66,20 +65,21 @@ CSS = r"""@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;5
 .soa-filter-lbl { color: var(--ink-soft); font-weight: 600; font-size: 7pt; margin-left: 4px; }
 .soa-filter-val { color: var(--ink); font-weight: 600; }
 
-/* TABLE */
+/* TABLE  (use > so nested sub-tables don't inherit these rules) */
 .soa-table { width: 100%; border-collapse: collapse; border: 1px solid var(--rule); font-size: 8.5pt; }
-.soa-table thead tr { background: #1e293b; color: var(--white); }
-.soa-table thead th {
-  padding: 6px 7px; text-align: center; font-size: 7.5pt; font-weight: 600;
-  letter-spacing: .3px; white-space: nowrap; border-left: 1px solid rgba(255,255,255,.12);
+.soa-table > thead > tr { background: var(--accent); color: var(--white); }
+.soa-table > thead > tr > th {
+  padding: 6px 7px; text-align: center; font-size: 7.5pt; font-weight: 700;
+  color: var(--white); letter-spacing: .3px; white-space: nowrap;
+  border-left: 1px solid rgba(255,255,255,.2);
 }
-.soa-table thead th:last-child { border-left: none; }
-.soa-table tbody tr:nth-child(even) { background: var(--row-alt); }
-.soa-table tbody td {
+.soa-table > thead > tr > th:last-child { border-left: none; }
+.soa-table > tbody > tr:nth-child(even) { background: var(--row-alt); }
+.soa-table > tbody > tr > td {
   padding: 4px 7px; border-bottom: 1px solid var(--rule);
   border-left: 1px solid var(--rule); vertical-align: middle; text-align: center;
 }
-.soa-table tbody td:last-child { border-left: none; }
+.soa-table > tbody > tr > td:last-child { border-left: none; }
 .soa-table .txt { text-align: right; }
 .soa-table .num { text-align: left; font-family: var(--mono); font-size: 8pt; white-space: nowrap; direction: ltr; }
 .soa-table .dt  { font-family: var(--mono); font-size: 7.5pt; color: var(--ink-soft); white-space: nowrap; direction: ltr; }
@@ -89,14 +89,14 @@ CSS = r"""@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;5
 
 /* Opening / Total / Detail rows */
 .soa-row-open td  { background: #eff6ff !important; font-weight: 700; color: #1e40af; border-top: 1.5px solid #bfdbfe !important; border-bottom: 1.5px solid #bfdbfe !important; }
-.soa-row-total td { background: #1e293b !important; color: var(--white) !important; font-weight: 700; font-size: 9pt; border-top: 2px solid var(--ink) !important; }
+.soa-row-total td { background: var(--accent) !important; color: var(--white) !important; font-weight: 700; font-size: 9pt; }
 .soa-row-detail td { background: #fcfcfc !important; color: var(--ink-soft); font-size: 7.5pt; font-style: italic; }
 .soa-detail-label { padding-right: 14px !important; }
 
 /* GRAND TOTALS */
 .soa-grand { margin-top: 22px; display: flex; justify-content: space-between; align-items: flex-end; flex-direction: row-reverse; }
-.soa-totals-box { border: 1.5px solid var(--rule-dark); border-radius: 5px; overflow: hidden; min-width: 340px; }
-.soa-totals-head { background: var(--ink); color: var(--white); padding: 5px 12px; font-size: 8pt; font-weight: 700; text-align: center; }
+.soa-totals-box { border: 1.5px solid var(--accent); border-radius: 5px; overflow: hidden; min-width: 340px; }
+.soa-totals-head { background: var(--accent); color: var(--white); padding: 5px 12px; font-size: 8pt; font-weight: 700; text-align: center; }
 .soa-totals-grid { display: flex; }
 .soa-tc { flex: 1; padding: 8px 12px; border-right: 1px solid var(--rule); text-align: center; }
 .soa-tc:last-child { border-right: none; }
@@ -336,7 +336,7 @@ def main():
 			"margin_left": 0.0,
 			"margin_right": 0.0,
 			"margin_top": 0.0,
-			"modified": "2026-06-26 12:00:00.000000",
+			"modified": "2026-06-26 18:00:00.000000",
 			"modified_by": "Administrator",
 			"module": "Match Utils",
 			"name": report_name,
