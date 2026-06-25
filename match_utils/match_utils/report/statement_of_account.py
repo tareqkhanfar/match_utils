@@ -17,11 +17,11 @@ def execute(filters, party_type):
 	filters = frappe._dict(filters or {})
 	_validate_filters(filters, party_type)
 
-	# expose party type + company currency to the print format
+	# expose party type, currency and logo to the print format
 	filters.party_type = party_type
-	filters.company_currency = frappe.get_cached_value(
-		"Company", filters.company, "default_currency"
-	)
+	company = frappe.get_cached_doc("Company", filters.company)
+	filters.company_currency = company.default_currency
+	filters.company_logo = company.company_logo or ""
 
 	columns = _get_columns(party_type)
 	data = _get_data(filters, party_type)
@@ -169,21 +169,29 @@ def _get_data(filters, party_type):
 		total_debit += debit
 		total_credit += credit
 
-		data.append(
-			{
-				"posting_date": gle.posting_date,
-				"voucher_type": gle.voucher_type,
-				"voucher_no": gle.voucher_no,
-				"remarks": gle.remarks,
-				"debit": debit,
-				"credit": credit,
-				"amount": amount,
-				"balance": balance,
-			}
-		)
+		row = {
+			"posting_date": gle.posting_date,
+			"voucher_type": gle.voucher_type,
+			"voucher_no": gle.voucher_no,
+			"remarks": gle.remarks,
+			"debit": debit,
+			"credit": credit,
+			"amount": amount,
+			"balance": balance,
+		}
 
-		if show_details:
-			data.extend(_get_detail_rows(gle, party_type))
+		items = _get_invoice_items(gle) if show_details else []
+		# Attach item list to the invoice row so the print format can render
+		# a sub-table under it.
+		if items:
+			row["_items"] = items
+
+		data.append(row)
+
+		# Also emit flat indented rows so the on-screen grid view shows the
+		# item lines (the grid cannot render nested sub-tables).
+		if items:
+			data.extend(_flat_detail_rows(items))
 
 	# Total row
 	data.append(
@@ -210,8 +218,8 @@ _DETAIL_SOURCES = {
 }
 
 
-def _get_detail_rows(gle, party_type):
-	"""Return indented item rows for invoice vouchers when Show Details is on."""
+def _get_invoice_items(gle):
+	"""Return the invoice item lines for a Sales/Purchase Invoice voucher."""
 	child_doctype = _DETAIL_SOURCES.get(gle.voucher_type)
 	if not child_doctype:
 		return []
@@ -223,11 +231,24 @@ def _get_detail_rows(gle, party_type):
 		order_by="idx asc",
 	)
 
+	return [
+		{
+			"item_name": item.item_name or item.item_code or "",
+			"qty": flt(item.qty),
+			"uom": item.uom or "",
+			"rate": flt(item.rate),
+			"amount": flt(item.amount),
+		}
+		for item in items
+	]
+
+
+def _flat_detail_rows(items):
+	"""Indented one-line-per-item rows for the on-screen grid view."""
 	rows = []
 	for item in items:
-		label = item.item_name or item.item_code or ""
 		detail = "{0} — {1} {2} × {3}".format(
-			label, flt(item.qty), item.uom or "", flt(item.rate)
+			item["item_name"], item["qty"], item["uom"], item["rate"]
 		)
 		rows.append(
 			{
@@ -237,7 +258,7 @@ def _get_detail_rows(gle, party_type):
 				"remarks": detail,
 				"debit": 0.0,
 				"credit": 0.0,
-				"amount": flt(item.amount),
+				"amount": item["amount"],
 				"balance": "",
 				"indent": 1,
 				"is_detail": 1,

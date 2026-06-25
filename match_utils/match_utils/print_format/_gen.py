@@ -29,9 +29,10 @@ CSS = r"""@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;5
 
 /* HEADER */
 .soa-header {
-  display: grid; grid-template-columns: auto 1fr; align-items: start;
-  border-bottom: 2.5px solid var(--rule-dark); padding-bottom: 10px; margin-bottom: 12px;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+  border-bottom: 2.5px solid var(--rule-dark); padding-bottom: 10px; margin-bottom: 12px; gap: 12px;
 }
+.soa-logo { max-height: 64px; max-width: 160px; object-fit: contain; }
 .soa-report-name { font-size: 14pt; font-weight: 700; color: var(--accent); letter-spacing: .3px; }
 .soa-period      { font-size: 8pt; color: var(--ink-soft); margin-top: 3px; }
 .soa-printed-by  { font-size: 7pt; color: var(--ink-soft); font-family: var(--mono); margin-top: 2px; direction: ltr; text-align: left; }
@@ -43,6 +44,18 @@ CSS = r"""@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;5
   font-family: var(--mono); font-size: 7pt; font-weight: 600;
   padding: 1px 6px; border-radius: 3px; margin-right: 5px; direction: ltr;
 }
+
+/* ITEM SUB-TABLE (Show Details) */
+.soa-items-row td { padding: 0 !important; background: #fbfdff !important; border-left: none !important; }
+.soa-subtable-wrap { padding: 4px 26px 8px 26px; }
+.soa-subtable-title { font-size: 7.5pt; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+.soa-subtable { width: 100%; border-collapse: collapse; font-size: 7.8pt; border: 1px solid #cfe0f5; }
+.soa-subtable thead tr { background: #eaf2fd; }
+.soa-subtable th { padding: 3px 6px; text-align: center; font-weight: 700; color: #1e3a5f; border: 1px solid #cfe0f5; white-space: nowrap; }
+.soa-subtable td { padding: 3px 6px; text-align: center; border: 1px solid #e3edf9; }
+.soa-subtable td.txt { text-align: right; }
+.soa-subtable td.num { text-align: left; font-family: var(--mono); direction: ltr; }
+.soa-subtable tfoot td { font-weight: 700; background: #f3f8ff; }
 
 /* FILTERS STRIP */
 .soa-filters {
@@ -98,7 +111,8 @@ CSS = r"""@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;5
 .soa-sig-line { border-top: 1px solid var(--ink); padding-top: 4px; font-size: 7.5pt; color: var(--ink-soft); margin-top: 32px; }
 
 /* FOOTER */
-.soa-footer { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 6px; display: flex; justify-content: space-between; font-size: 7pt; color: var(--ink-soft); }
+.soa-footer { margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 7pt; color: var(--ink-soft); }
+.soa-footer-brand { font-weight: 700; color: var(--accent); }
 
 @media print {
   .soa-table thead { display: table-header-group; }
@@ -144,6 +158,11 @@ HTML = r"""{%
 <div class="soa-wrap">
 
   <div class="soa-header">
+    {% if (filters.company_logo) { %}
+      <img class="soa-logo" src="{%= filters.company_logo %}">
+    {% } else { %}
+      <div></div>
+    {% } %}
     <div>
       <div class="soa-report-name">
         __TITLE__
@@ -156,7 +175,6 @@ HTML = r"""{%
     </div>
     <div class="soa-title-block">
       <div class="soa-company-name">{%= filters.company || "" %}</div>
-      <div class="soa-company-meta">Match Systems — كشف حساب</div>
       <div class="soa-printed-by">Printed: {%= now %}</div>
     </div>
   </div>
@@ -195,19 +213,53 @@ HTML = r"""{%
     <tbody>
       {% for (var i = 0; i < data.length; i++) { %}
         {% var row = data[i]; %}
+        {% if (row.is_detail) { continue; } %}
         {% var cls = ""; %}
         {% if (row.is_opening) { cls = "soa-row-open"; } %}
         {% if (row.is_total) { cls = "soa-row-total"; } %}
-        {% if (row.is_detail) { cls = "soa-row-detail"; } %}
         <tr class="{%= cls %}">
           <td class="dt">{%= fmtDate(row.posting_date) %}</td>
           <td>{%= vtype(row.voucher_type) %}</td>
           <td class="vc">{%= row.voucher_no || "" %}</td>
-          <td class="txt {% if (row.is_detail) { %}soa-detail-label{% } %}">{%= row.remarks || "" %}</td>
+          <td class="txt">{%= row.remarks || "" %}</td>
           <td class="num {%= (row.debit && !row.is_total && !row.is_opening) ? "dr-cell" : "" %}">{%= row.debit ? fmtMoney(row.debit) : "" %}</td>
           <td class="num {%= (row.credit && !row.is_total && !row.is_opening) ? "cr-cell" : "" %}">{%= row.credit ? fmtMoney(row.credit) : "" %}</td>
           <td class="num">{%= (row.balance === "" || row.balance === undefined) ? "" : fmtMoney(row.balance) %}</td>
         </tr>
+        {% if (row._items && row._items.length) { %}
+          <tr class="soa-items-row">
+            <td colspan="7">
+              <div class="soa-subtable-wrap">
+                <div class="soa-subtable-title">تفاصيل أصناف الفاتورة {%= row.voucher_no || "" %}</div>
+                <table class="soa-subtable">
+                  <thead>
+                    <tr>
+                      <th style="width: 6%;">م</th>
+                      <th style="width: 40%;">الصنف</th>
+                      <th style="width: 14%;">الكمية</th>
+                      <th style="width: 10%;">الوحدة</th>
+                      <th style="width: 15%;">السعر</th>
+                      <th style="width: 15%;">المجموع</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for (var j = 0; j < row._items.length; j++) { %}
+                      {% var it = row._items[j]; %}
+                      <tr>
+                        <td>{%= j + 1 %}</td>
+                        <td class="txt">{%= it.item_name || "" %}</td>
+                        <td class="num">{%= it.qty %}</td>
+                        <td>{%= it.uom || "" %}</td>
+                        <td class="num">{%= fmtMoney(it.rate) %}</td>
+                        <td class="num">{%= fmtMoney(it.amount) %}</td>
+                      </tr>
+                    {% } %}
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+        {% } %}
       {% } %}
     </tbody>
   </table>
@@ -238,7 +290,7 @@ HTML = r"""{%
 
   <div class="soa-footer">
     <span>{%= filters.company || "" %} — كشف حساب سري</span>
-    <span>Match Systems</span>
+    <span class="soa-footer-brand">Powered by Match Systems — شركة ماتش سيستمز لحلول الأنظمة التكنولوجية</span>
     <span>Printed: {%= now %}</span>
   </div>
 
