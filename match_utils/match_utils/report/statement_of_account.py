@@ -9,6 +9,7 @@ Works on Frappe v15 and v16 (only standard GL Entry fields are used).
 
 import frappe
 from frappe import _
+from frappe.query_builder.functions import Sum
 from frappe.utils import flt, getdate
 
 
@@ -89,16 +90,24 @@ def _get_party_conditions(filters, party_type):
 
 def _get_opening_balance(filters, party_type):
 	"""Sum of (debit - credit) for the party before From Date."""
-	rows = frappe.get_all(
-		"GL Entry",
-		filters={
-			**_get_party_conditions(filters, party_type),
-			"posting_date": ["<", filters.from_date],
-		},
-		fields=["sum(debit) as debit", "sum(credit) as credit"],
-	)
-	if rows and rows[0]:
-		return flt(rows[0].debit) - flt(rows[0].credit)
+	gle = frappe.qb.DocType("GL Entry")
+	row = (
+		frappe.qb.from_(gle)
+		.select(
+			Sum(gle.debit).as_("debit"),
+			Sum(gle.credit).as_("credit"),
+		)
+		.where(
+			(gle.party_type == party_type)
+			& (gle.party == filters.get(party_type.lower()))
+			& (gle.company == filters.company)
+			& (gle.is_cancelled == 0)
+			& (gle.posting_date < filters.from_date)
+		)
+	).run(as_dict=True)
+
+	if row and row[0]:
+		return flt(row[0].debit) - flt(row[0].credit)
 	return 0.0
 
 
