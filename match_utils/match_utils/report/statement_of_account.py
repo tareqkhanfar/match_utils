@@ -17,6 +17,12 @@ def execute(filters, party_type):
 	filters = frappe._dict(filters or {})
 	_validate_filters(filters, party_type)
 
+	# expose party type + company currency to the print format
+	filters.party_type = party_type
+	filters.company_currency = frappe.get_cached_value(
+		"Company", filters.company, "default_currency"
+	)
+
 	columns = _get_columns(party_type)
 	data = _get_data(filters, party_type)
 	return columns, data
@@ -197,7 +203,7 @@ def _get_data(filters, party_type):
 	return data
 
 
-# Voucher type -> (child doctype, parent fieldname) for detail expansion
+# Voucher type -> child doctype for detail expansion
 _DETAIL_SOURCES = {
 	"Sales Invoice": "Sales Invoice Item",
 	"Purchase Invoice": "Purchase Invoice Item",
