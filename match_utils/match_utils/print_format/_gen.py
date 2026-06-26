@@ -45,14 +45,15 @@ CSS = r"""@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;5
   padding: 1px 6px; border-radius: 3px; margin-right: 5px; direction: ltr;
 }
 
-/* ITEM SUB-TABLE (Show Details) */
-.soa-items-row td { padding: 0 !important; background: #f9fbff !important; border-left: none !important; }
-.soa-subtable-wrap { padding: 4px 26px 8px 26px; }
-.soa-subtable-title { font-size: 7.5pt; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
-.soa-subtable { width: 100%; border-collapse: collapse; font-size: 7.8pt; border: 1px solid #cfe0f5; background: var(--white); }
-.soa-subtable thead tr { background: #eaf2fd !important; color: #1e3a5f !important; }
-.soa-subtable thead th { padding: 3px 6px; text-align: center; font-weight: 700; color: #1e3a5f !important; background: #eaf2fd !important; border: 1px solid #cfe0f5; white-space: nowrap; }
-.soa-subtable tbody td { padding: 3px 6px; text-align: center; color: var(--ink); border: 1px solid #e3edf9; }
+/* ITEM SUB-TABLE (Show Details) — amber theme to distinguish from main table */
+.soa-items-row td { padding: 0 !important; background: #fffaf2 !important; border-left: none !important; }
+.soa-subtable-wrap { padding: 4px 26px 8px 26px; border-right: 3px solid #e08e0b; }
+.soa-subtable-title { font-size: 7.5pt; font-weight: 700; color: #b45309; margin-bottom: 3px; }
+.soa-subtable { width: 100%; border-collapse: collapse; font-size: 7.8pt; border: 1px solid #f0d28a; background: var(--white); }
+.soa-subtable thead tr { background: #fdecc8 !important; color: #92400e !important; }
+.soa-subtable thead th { padding: 3px 6px; text-align: center; font-weight: 700; color: #92400e !important; background: #fdecc8 !important; border: 1px solid #f0d28a; white-space: nowrap; }
+.soa-subtable tbody tr:nth-child(even) td { background: #fffaf2; }
+.soa-subtable tbody td { padding: 3px 6px; text-align: center; color: var(--ink); border: 1px solid #f6e4bd; }
 .soa-subtable tbody td.txt { text-align: right; }
 .soa-subtable tbody td.num { text-align: left; font-family: var(--mono); direction: ltr; }
 
@@ -336,7 +337,7 @@ def main():
 			"margin_left": 0.0,
 			"margin_right": 0.0,
 			"margin_top": 0.0,
-			"modified": "2026-06-26 18:00:00.000000",
+			"modified": "2026-06-26 22:00:00.000000",
 			"modified_by": "Administrator",
 			"module": "Match Utils",
 			"name": report_name,
