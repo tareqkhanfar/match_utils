@@ -765,7 +765,36 @@ def after_migrate():
 	"""
 	create_workspace()
 	_purge_navbar_help_items()
+	_fix_workspace_report_links()
 	frappe.db.commit()
+
+
+def _fix_workspace_report_links():
+	"""Ensure all Report links in the برنامج المحاسبة workspace route to the
+	query-report view (is_query_report=1). Without this, Script Reports open a
+	blank /desk/<doctype>/view/report/<name> page on Frappe 16.
+
+	Runs on every migrate so any site (including those whose workspace was
+	customised in the UI and therefore not overwritten by the fixture) gets
+	fixed automatically.
+	"""
+	workspace = "برنامج المحاسبة"
+	if not frappe.db.exists("Workspace", workspace):
+		return
+
+	updated = frappe.db.sql(
+		"""
+		UPDATE `tabWorkspace Link`
+		SET is_query_report = 1, report_ref_doctype = NULL
+		WHERE parent = %s
+		AND link_type = 'Report'
+		AND (is_query_report = 0 OR is_query_report IS NULL)
+		""",
+		workspace,
+	)
+
+	# Drop the cached bootinfo so the fix is visible without manual clear-cache
+	frappe.clear_cache()
 
 
 def _purge_navbar_help_items():
