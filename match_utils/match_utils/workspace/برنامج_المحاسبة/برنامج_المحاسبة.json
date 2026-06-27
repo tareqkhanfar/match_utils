@@ -106,7 +106,7 @@
   {
    "dependencies": "GL Entry",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "كشف حساب",
    "link_count": 0,
    "link_to": "General Ledger",
@@ -117,7 +117,7 @@
   {
    "dependencies": "GL Entry",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "ميزان المراجعة",
    "link_count": 0,
    "link_to": "Trial Balance",
@@ -178,7 +178,7 @@
   {
    "dependencies": "Stock Ledger Entry",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "رصيد المخزون",
    "link_count": 0,
    "link_to": "Stock Balance",
@@ -189,7 +189,7 @@
   {
    "dependencies": "Stock Ledger Entry",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "حركات المخزون",
    "link_count": 0,
    "link_to": "Stock Ledger",
@@ -230,7 +230,7 @@
   {
    "dependencies": "Sales Invoice",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "ارباح المبيعات",
    "link_count": 0,
    "link_to": "Gross Profit",
@@ -241,7 +241,7 @@
   {
    "dependencies": "Sales Invoice",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "تقرير فواتير المبيعات",
    "link_count": 0,
    "link_to": "Sales Register",
@@ -262,7 +262,7 @@
   {
    "dependencies": "Purchase Invoice",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "ذمم التجار",
    "link_count": 0,
    "link_to": "Supplier Ledger Summary",
@@ -273,7 +273,7 @@
   {
    "dependencies": "Sales Invoice",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "اعمار الذمم للزبائن",
    "link_count": 0,
    "link_to": "Accounts Receivable",
@@ -284,7 +284,7 @@
   {
    "dependencies": "Purchase Invoice",
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "اعمار الذمم للتجار",
    "link_count": 0,
    "link_to": "Accounts Payable",
@@ -298,5 +298,6 @@
  "public": 1,
  "quick_lists": [],
  "shortcuts": [],
- "title": "برنامج المحاسبة"
+ "title": "برنامج المحاسبة",
+ "modified": "2026-06-26 23:00:00.000000"
 }
