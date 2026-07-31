@@ -13,7 +13,7 @@ class Expense(Document):
 		if self.amount is not None and self.amount <= 0:
 			frappe.throw(_("Amount must be greater than zero"))
 
-		if self.party_type and not self.party:
+		if self.docstatus == 1 and self.party_type and not self.party:
 			frappe.throw(_("Party is required when Party Type is set"))
 
 	def set_accounts_from_expense_type(self):
