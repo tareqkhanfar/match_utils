@@ -756,6 +756,7 @@ def after_install():
 	setup_home_page()
 	setup_translations()
 	create_workspace()
+	setup_expense_reference_type()
 	frappe.db.commit()
 
 
@@ -766,7 +767,37 @@ def after_migrate():
 	create_workspace()
 	_purge_navbar_help_items()
 	_fix_workspace_report_links()
+	setup_expense_reference_type()
 	frappe.db.commit()
+
+
+def setup_expense_reference_type():
+	"""Add 'Expense' to Journal Entry Account's reference_type Select options.
+
+	Journal Entry rows created from the Expense doctype set
+	reference_type = "Expense" to link back to the source document. The
+	core field's option list doesn't include it, so we extend it here via
+	a Property Setter instead of touching the core doctype JSON. Idempotent.
+	"""
+	current_options = frappe.get_meta("Journal Entry Account").get_field("reference_type").options or ""
+	option_list = [opt for opt in current_options.split("\n") if opt]
+
+	if "Expense" in option_list:
+		return
+
+	option_list.append("Expense")
+
+	from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+	make_property_setter(
+		"Journal Entry Account",
+		"reference_type",
+		"options",
+		"\n".join(option_list),
+		"Text",
+		validate_fields_for_doctype=False,
+	)
+	frappe.clear_cache(doctype="Journal Entry Account")
 
 
 def _fix_workspace_report_links():
