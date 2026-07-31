@@ -765,10 +765,75 @@ def after_migrate():
 	Runs AFTER frappe's sync_standard_items(), so deletions here persist.
 	"""
 	create_workspace()
+	_sync_workspace_links()
 	_purge_navbar_help_items()
 	_fix_workspace_report_links()
 	setup_expense_reference_type()
 	frappe.db.commit()
+
+
+def _sync_workspace_links():
+	"""Add any WORKSPACE_LINKS rows missing from an already-existing workspace.
+
+	create_workspace() only runs on a fresh site (it no-ops if the workspace
+	already exists), so sites that installed match_utils before new links
+	were added to WORKSPACE_LINKS would never receive them. This finds each
+	card's last existing row by label and inserts missing links right after
+	it, then recomputes every card's link_count.
+	"""
+	name = "برنامج المحاسبة"
+	if not frappe.db.exists("Workspace", name):
+		return
+
+	ws = frappe.get_doc("Workspace", name)
+	existing = {(row.label, row.link_to) for row in ws.links}
+
+	# Group desired links by their card label, keeping only missing ones.
+	missing_by_card = {}
+	current_card = None
+	for link in WORKSPACE_LINKS:
+		if link["type"] == "Card Break":
+			current_card = link["label"]
+			missing_by_card.setdefault(current_card, [])
+		elif (link["label"], link["link_to"]) not in existing:
+			missing_by_card[current_card].append(link)
+
+	if not any(missing_by_card.values()):
+		return
+
+	# Insert missing links right after the last row belonging to their card
+	# (i.e. right before the next Card Break, or at the end of the table).
+	rows = list(ws.links)
+	current_card = None
+	rebuilt = []
+	for row in rows:
+		if row.type == "Card Break":
+			for link in missing_by_card.get(current_card, []):
+				rebuilt.append(link)
+			current_card = row.label
+		rebuilt.append(row.as_dict())
+	for link in missing_by_card.get(current_card, []):
+		rebuilt.append(link)
+
+	ws.links = []
+	for entry in rebuilt:
+		ws.append("links", entry)
+	for i, row in enumerate(ws.links):
+		row.idx = i + 1
+
+	for row in ws.links:
+		if row.type != "Card Break":
+			continue
+		count = 0
+		for other in ws.links:
+			if other.idx <= row.idx:
+				continue
+			if other.type == "Card Break":
+				break
+			count += 1
+		row.link_count = count
+
+	ws.save(ignore_permissions=True)
 
 
 def setup_expense_reference_type():
@@ -973,13 +1038,14 @@ def setup_translations():
 
 
 WORKSPACE_LINKS = [
-	{"type": "Card Break", "label": "Accounting (المحاسبة)", "link_type": "DocType", "link_to": None, "link_count": 11},
+	{"type": "Card Break", "label": "Accounting (المحاسبة)", "link_type": "DocType", "link_to": None, "link_count": 12},
 	{"type": "Link", "label": "الشركة", "link_type": "DocType", "link_to": "Company"},
 	{"type": "Link", "label": "الشجرة المحاسبية", "link_type": "DocType", "link_to": "Account"},
 	{"type": "Link", "label": "القيود اليومية", "link_type": "DocType", "link_to": "Journal Entry"},
 	{"type": "Link", "label": "سندات القبض والدفع", "link_type": "DocType", "link_to": "Payment Entry"},
 	{"type": "Link", "label": "فاتورة مبيعات", "link_type": "DocType", "link_to": "Sales Invoice"},
 	{"type": "Link", "label": "فاتورة مشتريات", "link_type": "DocType", "link_to": "Purchase Invoice"},
+	{"type": "Link", "label": "المصروفات", "link_type": "DocType", "link_to": "Expense"},
 	{"type": "Link", "label": "السنة المالية", "link_type": "DocType", "link_to": "Fiscal Year"},
 	{"type": "Link", "label": "طرق الدفع", "link_type": "DocType", "link_to": "Mode of Payment"},
 	{"type": "Link", "label": "كشف حساب", "link_type": "Report", "link_to": "General Ledger", "report_ref_doctype": "GL Entry"},
@@ -992,7 +1058,7 @@ WORKSPACE_LINKS = [
 	{"type": "Link", "label": "رصيد المخزون", "link_type": "Report", "link_to": "Stock Balance", "report_ref_doctype": "Stock Ledger Entry"},
 	{"type": "Link", "label": "حركات المخزون", "link_type": "Report", "link_to": "Stock Ledger", "report_ref_doctype": "Stock Ledger Entry"},
 	{"type": "Link", "label": "قيد المخزون", "link_type": "DocType", "link_to": "Stock Entry"},
-	{"type": "Card Break", "label": "Reports (  تقارير مالية )", "link_type": "DocType", "link_to": None, "link_count": 7},
+	{"type": "Card Break", "label": "Reports (  تقارير مالية )", "link_type": "DocType", "link_to": None, "link_count": 9},
 	{"type": "Link", "label": "الارباح والخسائر", "link_type": "Report", "link_to": "Profit and Loss Statement", "is_query_report": 1},
 	{"type": "Link", "label": "ارباح المبيعات", "link_type": "Report", "link_to": "Gross Profit", "report_ref_doctype": "Sales Invoice"},
 	{"type": "Link", "label": "تقرير فواتير المبيعات", "link_type": "Report", "link_to": "Sales Register", "report_ref_doctype": "Sales Invoice"},
@@ -1000,6 +1066,8 @@ WORKSPACE_LINKS = [
 	{"type": "Link", "label": "ذمم التجار", "link_type": "Report", "link_to": "Supplier Ledger Summary", "report_ref_doctype": "Purchase Invoice"},
 	{"type": "Link", "label": "اعمار الذمم للزبائن", "link_type": "Report", "link_to": "Accounts Receivable", "report_ref_doctype": "Sales Invoice"},
 	{"type": "Link", "label": "اعمار الذمم للتجار", "link_type": "Report", "link_to": "Accounts Payable", "report_ref_doctype": "Purchase Invoice"},
+	{"type": "Link", "label": "كشف حساب العميل", "link_type": "Report", "link_to": "Customer Statement of Account", "report_ref_doctype": "GL Entry"},
+	{"type": "Link", "label": "كشف حساب المورد", "link_type": "Report", "link_to": "Supplier Statement of Account", "report_ref_doctype": "GL Entry"},
 ]
 
 WORKSPACE_CONTENT = (
