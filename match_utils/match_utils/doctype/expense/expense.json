@@ -12,6 +12,7 @@
   "posting_date",
   "column_break_5",
   "cost_center",
+  "mode_of_payment",
   "amount",
   "bill_no",
   "section_break_9",
@@ -72,6 +73,13 @@
    "fieldtype": "Link",
    "label": "مركز الكلفة",
    "options": "Cost Center"
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "طريقة الدفع",
+   "options": "Mode of Payment"
   },
   {
    "fieldname": "amount",

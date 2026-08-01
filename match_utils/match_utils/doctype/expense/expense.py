@@ -33,11 +33,36 @@ class Expense(Document):
 			)
 
 		self.expense_account = account_row.expense_account
-		self.credit_account = account_row.credit_account
 		self.party_type = account_row.party_type or None
 
 		if not self.cost_center and account_row.default_cost_center:
 			self.cost_center = account_row.default_cost_center
+
+		if self.mode_of_payment:
+			self.credit_account = self.get_account_for_mode_of_payment()
+		else:
+			self.credit_account = account_row.credit_account
+			self.mode_of_payment = self.find_mode_of_payment_for_account(self.credit_account)
+
+	def get_account_for_mode_of_payment(self):
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+
+		return get_bank_cash_account(self.mode_of_payment, self.company).get("account")
+
+	def find_mode_of_payment_for_account(self, account):
+		if not account:
+			return None
+
+		matches = frappe.get_all(
+			"Mode of Payment Account",
+			filters={"company": self.company, "default_account": account},
+			pluck="parent",
+		)
+
+		if len(matches) == 1:
+			return matches[0]
+
+		return None
 
 	def on_submit(self):
 		je = self.create_journal_entry()
