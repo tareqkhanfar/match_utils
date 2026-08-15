@@ -3,8 +3,10 @@
 // workspace sidebar. Frappe 16 only: no-ops on v15 and earlier, where
 // neither element exists.
 frappe.after_ajax(function () {
-	const frappe_version = frappe.boot && frappe.boot.versions && frappe.boot.versions.frappe
-		? frappe.boot.versions.frappe.version
+	// frappe.boot.versions is a flat { app_name: "x.y.z" } map
+	// (see bootinfo.versions in frappe/boot.py), not nested under .version.
+	const frappe_version = frappe.boot && frappe.boot.versions
+		? frappe.boot.versions.frappe
 		: null;
 	const major_version = frappe_version ? parseInt(frappe_version.split(".")[0], 10) : null;
 
