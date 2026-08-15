@@ -1,7 +1,7 @@
 // Match Systems Frappe 16 sidebar cleanup — removes the "Switch to Frappe CRM"
-// promotional banner from the sidebar. Frappe 16 only: no-ops on v15 and
-// earlier, where frappe.ui.sidebar's promotional-banners feature doesn't
-// exist.
+// promotional banner and the "about" (i) button from the bottom of the
+// workspace sidebar. Frappe 16 only: no-ops on v15 and earlier, where
+// neither element exists.
 frappe.after_ajax(function () {
 	const frappe_version = frappe.boot && frappe.boot.versions && frappe.boot.versions.frappe
 		? frappe.boot.versions.frappe.version
@@ -19,15 +19,27 @@ frappe.after_ajax(function () {
 		}).remove();
 	}
 
+	// <button class="about-sidebar-link btn btn-ghost btn-xs"> in
+	// .sidebar-bottom-actions, next to the collapse-sidebar-link button.
+	// Opens the "Frappe Framework" About dialog.
+	function remove_about_button() {
+		$(".about-sidebar-link").remove();
+	}
+
+	function cleanup() {
+		remove_crm_banner();
+		remove_about_button();
+	}
+
 	$(document).on("app_ready page-change", function () {
-		setTimeout(remove_crm_banner, 200);
+		setTimeout(cleanup, 200);
 	});
 
-	// The sidebar (and its .promotional-banners container) is built
-	// dynamically well after DOMContentLoaded, so observe document.body
-	// broadly rather than a container that may not exist yet.
+	// The sidebar (and these elements) is built dynamically well after
+	// DOMContentLoaded, so observe document.body broadly rather than a
+	// container that may not exist yet.
 	if (window.MutationObserver) {
-		const observer = new MutationObserver(remove_crm_banner);
+		const observer = new MutationObserver(cleanup);
 		const start_observing = function () {
 			observer.observe(document.body, { childList: true, subtree: true });
 		};
@@ -38,5 +50,5 @@ frappe.after_ajax(function () {
 		}
 	}
 
-	remove_crm_banner();
+	cleanup();
 });
