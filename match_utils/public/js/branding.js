@@ -123,4 +123,38 @@ frappe.after_ajax(function () {
 			document.title = document.title.replace(/ERPNext/g, "Match ERP");
 		}
 	}
+	/* ── 4. Unwrap links that point to Frappe / ERPNext sites ─────────── */
+	// e.g. the "Submitted Record cannot be deleted... Cancel it first" message
+	// (frappe/model/delete_doc.py) links to docs.frappe.io. The link text is
+	// kept; only the anchor is removed so users never get sent off-site.
+	const EXTERNAL_BRAND_LINK = /^https?:\/\/([^/]*\.)?(frappe\.io|frappecloud\.com|frappe\.school|erpnext\.com|github\.com\/frappe)(\/|$)/i;
+
+	function unwrap_brand_links(root) {
+		(root || document).querySelectorAll("a[href]").forEach(function (a) {
+			if (EXTERNAL_BRAND_LINK.test(a.getAttribute("href") || "")) {
+				a.replaceWith(document.createTextNode(a.textContent));
+			}
+		});
+	}
+
+	if (window.MutationObserver) {
+		const link_observer = new MutationObserver(function (mutations) {
+			mutations.forEach(function (m) {
+				m.addedNodes.forEach(function (node) {
+					if (node.nodeType === 1) {
+						if (node.tagName === "A") unwrap_brand_links(node.parentNode);
+						else unwrap_brand_links(node);
+					}
+				});
+			});
+		});
+		const start_link_observer = function () {
+			link_observer.observe(document.body, { childList: true, subtree: true });
+		};
+		if (document.body) start_link_observer();
+		else document.addEventListener("DOMContentLoaded", start_link_observer);
+	}
+	$(document).on("app_ready page-change", function () {
+		setTimeout(unwrap_brand_links, 200);
+	});
 });
