@@ -28,9 +28,22 @@ frappe.after_ajax(function () {
 		$(".about-sidebar-link").remove();
 	}
 
+	// Sidebar header subtitle under "Build" shows the owning app's app_title
+	// ("Frappe Framework", see sidebar.js choose_app_name). Rewrite only that
+	// exact subtitle element so app_title itself, the About dialog and other
+	// apps' subtitles stay untouched.
+	function rename_frappe_subtitle() {
+		$(".sidebar-header .header-subtitle").each(function () {
+			if ($(this).text().trim() === "Frappe Framework") {
+				$(this).text("Match ERP");
+			}
+		});
+	}
+
 	function cleanup() {
 		remove_crm_banner();
 		remove_about_button();
+		rename_frappe_subtitle();
 	}
 
 	$(document).on("app_ready page-change", function () {
