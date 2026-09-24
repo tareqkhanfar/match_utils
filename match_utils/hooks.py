@@ -29,7 +29,16 @@ app_include_js = "match_utils.bundle.js"
 # include js in doctype views
 doctype_js = {
     "Payment Entry": "public/js/payment_entry_share.js",
-    "Fees": "public/js/fees_share.js"
+    "Fees": "public/js/fees_share.js",
+    "User": "public/js/user_desk_control.js",
+}
+
+boot_session = "match_utils.desk_control.boot_session"
+
+doc_events = {
+    "User": {
+        "on_update": "match_utils.desk_control.clear_user_desk_cache",
+    },
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}

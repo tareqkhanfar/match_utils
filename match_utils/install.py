@@ -757,6 +757,7 @@ def after_install():
 	setup_translations()
 	create_workspace()
 	setup_expense_reference_type()
+	setup_desk_control_fields()
 	frappe.db.commit()
 
 
@@ -769,7 +770,14 @@ def after_migrate():
 	_purge_navbar_help_items()
 	_fix_workspace_report_links()
 	setup_expense_reference_type()
+	setup_desk_control_fields()
 	frappe.db.commit()
+
+
+def setup_desk_control_fields():
+	from match_utils.desk_control import setup_custom_fields
+
+	setup_custom_fields()
 
 
 def _sync_workspace_links():
