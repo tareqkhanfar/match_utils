@@ -794,6 +794,8 @@ def _sync_workspace_links():
 		return
 
 	ws = frappe.get_doc("Workspace", name)
+	if not ws.type:
+		ws.type = "Workspace"
 	existing = {(row.label, row.link_to) for row in ws.links}
 
 	# Group desired links by their card label, keeping only missing ones.
